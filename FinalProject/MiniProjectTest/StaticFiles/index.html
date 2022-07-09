@@ -1,0 +1,248 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini Project</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmlson.js@1.0.4/src/htmlson.js"></script>
+    
+    <script>
+        $(function () {
+            $("#tabs").tabs();
+        });
+        $(document).ready(function () {
+            $("#productId").change(function () {
+                var productId = $("#productId").val();
+                var product = getById(productId);
+                Object.keys(product).forEach(key => {
+                    $("#productFormUpdate").find('input[name=' + key + ']').val(product[key])
+                });
+            });
+            
+        });
+       
+        function convertFormToJSON(form) {
+            const array = $(form).serializeArray();
+            const json = {};
+            $.each(array, function () {
+                json[this.name] = this.value || "";
+            });
+            return json;
+        }
+    </script>
+
+</head>
+<body>
+
+    <div id="tabs">
+        <ul>
+            <li><a href="#tabs-1">Create Product</a></li>
+            <li><a href="#tabs-2">List of Products</a></li>
+            <li><a href="#tabs-3">Update Product</a></li>
+            <li><a href="#tabs-4">Delete Product</a></li>
+        </ul>
+        <div id="tabs-1">
+            <form id="productForm">
+                <label for="productName">Product Name:</label><br>
+                <input type="text" id="productName" name="productName" value="">
+                <br>
+                <br>
+                <label for="price">Product Price:</label><br>
+                <input type="text" id="price" name="price" value="">
+                <br>
+                <br>
+                <label for="brand">Brand:</label><br>
+                <input type="text" id="brand" name="brand" value="">
+                <br>
+                <br>
+                <label for="manufactureDate">Manufacture Date:</label><br>
+                <input type="datetime-local" id="manufactureDate" name="manufactureDate" value="">
+                <br>
+                <br>
+                <label for="expirationDate">Expire Date:</label><br>
+                <input type="datetime-local" id="expirationDate" name="expirationDate" value="">
+                <br />
+                <br />
+                <button type="submit"> Add </button>
+            </form>
+        </div>
+        <div id="tabs-2">
+            <table id="example" style="width:100%">
+            </table>
+        </div>
+        <div id="tabs-3">
+            <lable for="productId">Product Id:</lable>
+            <input type="text" id="productId" name="productId" value="">
+            <br />
+            <br />
+            <form id="productFormUpdate">
+                <label for="productName">Product Name:</label><br>
+                <input type="text" id="productName" name="productName" value="">
+                <br>
+                <br>
+                <label for="price">Product Price:</label><br>
+                <input type="text" id="price" name="price" value="">
+                <br>
+                <br>
+                <label for="brand">Brand:</label><br>
+                <input type="text" id="brand" name="brand" value="">
+                <br>
+                <br>
+                <label for="manufactureDate">Manufacture Date:</label><br>
+                <input type="text" id="manufactureDate" name="manufactureDate" value="">
+                <br>
+                <br>
+                <label for="expirationDate">Expire Date:</label><br>
+                <input type="text" id="expirationDate" name="expirationDate" value="">
+                <br />
+                <br />
+                <button type="submit"> Update </button>
+            </form>
+        </div>
+        <div id="tabs-4">
+            <lable for="deleteById">Product Id:</lable>
+            <input type="text" id="deleteById" name="deleteById" value="">
+            <button onclick="deleteById()"> Delete </button>
+        </div>
+    </div>
+    <script>
+        const url = "http://localhost:48463/api/products";
+        function deleteById() {
+            var id = $("#deleteById").val();
+            $.ajax({
+                url: url + "/"+id,
+                type: "DELETE",
+                success: function (data) {
+                    alert("Deleted");
+                },
+                 error: function (data) {
+                    if (data.status == 404) {
+                        alert("No product found with id: " + id);
+                    }
+                },
+                failure: function (data) {
+                    if (data.status == 404) {
+                        alert("No product found with id: " + id);
+                    }
+                }
+            });
+        }
+        // To get list of products and 
+        jQuery.extend({
+            getValues: function (url) {
+                var result = null;
+                // jquery ajax get call
+                $.ajax({
+                    url: url,
+                    type: 'get',
+                    dataType: 'json',
+                    async: false,
+                    success: function (data) {
+                        result = data;
+                    }
+                });
+                return result;
+            }
+        });
+       
+        function getById(id) {
+            var res = false;
+            $.ajax({
+                url: url + "/" + id,
+                type: 'GET',
+                dataType: 'json',
+                async: false,
+                success: function (data) {
+                    res = data;
+                },
+                error: function (data) {
+                    if (data.status == 404) {
+                        alert("No product found with id: " + id);
+                    }
+                },
+                failure: function (data) {
+                    if (data.status == 404) {
+                        alert("No product found with id: " + id);
+                    }
+                }
+            });
+            return res;
+        }
+        // To display result in table using library
+        var myTable = $('#example').htmlson({
+            data: $.getValues(url),
+            headers: {
+                0: "Product Id",
+                1: "Product Name",
+                2: "Price",
+                3: "Brand",
+                4: "Manufacture Date",
+                5: "Expiration Date"
+            }
+        });
+        function convertFormToJSON(form) {
+            const array = $(form).serializeArray(); 
+            const json = {};
+            $.each(array, function () {
+                json[this.name] = this.value || "";
+            });
+            return json;
+        }
+        $("#productFormUpdate").on("submit", function (e) {
+            e.preventDefault();
+            var jsonData = convertFormToJSON("#productFormUpdate");
+            jsonData["productId"] = $("#productId").val();
+            console.log(jsonData);
+            $.ajax({
+                url: url + "/" + $("#productId").val(),
+                contentType: "application/json; charset=utf-8",
+                type: 'PUT',
+                dataType: 'json',
+                data: JSON.stringify(jsonData),
+                success: function (res) {
+                    console.log(res);
+                },
+                failure: function (res) {
+                    console.log(res);
+                },
+                error: function (res) {
+                    console.log(res);
+                }
+            })
+        });
+        $("#productForm").on("submit", function (e) {
+            e.preventDefault();
+            //console.log(convertFormToJSON("#productForm"));
+            $.ajax({
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                type: 'POST',
+                dataType: 'json',
+                data: JSON.stringify(convertFormToJSON("#productForm")),
+                success: function (res) {
+                    console.log(res);
+                },
+                failure: function (res) {
+                    console.log(res);
+                },
+                error: function (res) {
+                    console.log(res);
+
+                }
+            });
+        });
+
+        
+
+       
+
+    </script>
+
+</body>
+</html>
+<script>
+   
+</script>
